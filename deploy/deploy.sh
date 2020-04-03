@@ -39,7 +39,7 @@ npm install
 
 echo
 /bin/echo -e "\e[36mReload the app with pm2\e[0m"
-pm2 reload yntht
+pm2 reload hearts
 
 # Exit Server
 ENDSSH
