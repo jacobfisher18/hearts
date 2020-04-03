@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 
-const numPlayers = 4;
+const NUM_PLAYERS = 4;
 
 class App extends React.Component {
   constructor(props) {
@@ -31,7 +31,7 @@ class App extends React.Component {
     this.renderRoundStack = this.renderRoundStack.bind(this);
     this.playCard = this.playCard.bind(this);
     this.submitName = this.submitName.bind(this);
-    this.playAgain = this.playAgain.bind(this);
+    this.resetGame = this.resetGame.bind(this);
   }
 
   submitName(e) {
@@ -94,8 +94,8 @@ class App extends React.Component {
       });
   }
 
-  playAgain = () => {
-    fetch(`/api/restart`)
+  resetGame = () => {
+    fetch(`/api/reset`)
       .then((response) => response.json()) // response must be in json or this will error
       .then((myJson) => {
         if (myJson.error) {
@@ -139,7 +139,7 @@ class App extends React.Component {
   }
 
   startGame() {
-    if (this.state.gameState.players.length !== numPlayers) {
+    if (this.state.gameState.players.length !== NUM_PLAYERS) {
       this.setState({ error: 'Game does not look full yet. Maybe try refreshing.' });
       return;
     }
@@ -271,7 +271,7 @@ class App extends React.Component {
               <p>{item.playerName} got {item.pointsThisRound} points</p>
             )
           })}
-          <button onClick={this.playAgain}>Play Again</button>
+          <button onClick={this.resetGame}>Reset Game</button>
         </div>
       )
     }

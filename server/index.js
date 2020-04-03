@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const port = 5000;
-const { numPlayers, numCardsPerRound, numCardsInDeck, RANKS, SUITS } = require('./constants');
+const { NUM_PLAYERS, NUM_CARDS_PER_ROUND, NUM_CARDS_IN_DECK, RANKS, SUITS } = require('./constants');
 
 // Utilities
 const removeFromDeck = (array, value) => {
@@ -15,7 +15,7 @@ const removeFromDeck = (array, value) => {
 
 const advanceCurrentTurnByOne = () => {
   // TODO: we desperately need Typescript, look at all the type errors we can get
-  if (Number(gameState.currentTurnIndex) === Number(numPlayers - 1)) {
+  if (Number(gameState.currentTurnIndex) === Number(NUM_PLAYERS - 1)) {
     gameState.currentTurnIndex = 0;
   } else {
     gameState.currentTurnIndex++;
@@ -31,11 +31,11 @@ const totalAvailableCards = () => {
 }
 
 const isFirstMoveOfGame = () => {
-  return totalAvailableCards() === numCardsInDeck;
+  return totalAvailableCards() === NUM_CARDS_IN_DECK;
 }
 
 const isFirstRound = () => {
-  return totalAvailableCards() >= (numCardsInDeck - numPlayers + 1);
+  return totalAvailableCards() >= (NUM_CARDS_IN_DECK - NUM_PLAYERS + 1);
 }
 
 const isGameOver = () => {
@@ -78,28 +78,20 @@ const highestRank = (arr) => {
   return '';
 }
 
-// This deck stuff is messed up, it's doing deep copies
-const DECK = [];
-for (i of Object.keys(RANKS)) {
-  for (j of Object.keys(SUITS)) {
-    DECK.push({
-      RANK: i,
-      SUIT: j
-    })
-  }
+// State
+const setBlankGameState = () => {
+  gameState.players = [];
+  gameState.active = false; // whether the game has started
+  gameState.deck = []; // all the cards left for the current game (notice the game-round distinction)
+  gameState.currentTurnIndex = 0; // index of the player who's turn it currently is
+  gameState.roundStack = []; // stack of cards played in the current round, and the person that played it
+  gameState.showResults = false; // whether to show the score of the game that just happened
+  gameState.playerPointsMap = {}; // the results of the game that just happened
 }
 
-// State
 // Any requests that modify gameState should return the new gameState
-const gameState = {
-  players: [],
-  active: false, // whether the game has started
-  deck: DECK, // all the cards left for the current game (notice the game-round distinction)
-  currentTurnIndex: 0, // index of the player who's turn it currently is
-  roundStack: [], // stack of cards played in the current round, and the person that played it
-  showResults: false, // whether to show the score of the game that just happened
-  playerPointsMap: {}, // the results of the game that just happened
-}
+const gameState = {}
+setBlankGameState();
 
 // Functions that modify gameState
 const addPlayerToGame = (name) => {
@@ -114,6 +106,16 @@ const addPlayerToGame = (name) => {
 const startGame = () => {
   // Set game state active
   gameState.active = true;
+
+  // Fill the deck with all the cards
+  for (i of Object.keys(RANKS)) {
+    for (j of Object.keys(SUITS)) {
+      gameState.deck.push({
+        RANK: i,
+        SUIT: j
+      })
+    }
+  }
 
   // Deal cards from deck
   for (i in gameState.players) {
@@ -140,7 +142,7 @@ const playCard = (index, rank, suit) => {
   gameState.roundStack.push({ card: { RANK: rank, SUIT: suit }, playerIndex: index });
 
   // check if this is the fourth card played in the round; if so, assign the cards to the person who played the highest relevant rank
-  if (gameState.roundStack.length === numCardsPerRound) {
+  if (gameState.roundStack.length === NUM_CARDS_PER_ROUND) {
     const roundStackBaseSuitOnly = gameState.roundStack.filter(item => item.card.SUIT === baseSuit);
     const highestRankOfBaseSuit = highestRank(roundStackBaseSuitOnly.map(item => item.card));
     const roundStackItemWithHighestRank = roundStackBaseSuitOnly.find(item => item.card.RANK === highestRankOfBaseSuit);
@@ -157,9 +159,7 @@ const playCard = (index, rank, suit) => {
     // set current turn to the winner
     gameState.currentTurnIndex = Number(winningIndex);
 
-    // TODO: end the game, calculate the point values for everyone; either via counting hearts or shoot the moon
     if (isGameOver()) {
-
       const playerPointsMap = gameState.players.map(player => {
         let numPoints = 0;
         for (earnedCard of player.earnedCards) {
@@ -172,15 +172,13 @@ const playCard = (index, rank, suit) => {
         }
       })
 
-      console.log('playerPointsMap', playerPointsMap);
-
       gameState.playerPointsMap = playerPointsMap;
       gameState.showResults = true;
 
       // TODO: 
-      // - calculate if someone shot the moon
-      // - store these point values and display in the UI
-      // - reset game state so that we can play again
+      // - store these point values across multiple game
+      // - calculate if someone shot the moon, and give option to assign points
+      // - ability to play again with current username
     }
 
   } else {
@@ -269,6 +267,9 @@ app.get('/api/simulate', (req, res) => {
     return;
   }
 
+  // Start with a fresh state if it's not fresh already
+  setBlankGameState();
+
   console.info('beginning simulation...');
 
   // Add the players
@@ -281,7 +282,7 @@ app.get('/api/simulate', (req, res) => {
   startGame(); console.info('game started');
 
   // Simulate all 52 moves in the game
-  Array.from(Array(numCardsInDeck)).forEach((x, i) => {
+  Array.from(Array(NUM_CARDS_IN_DECK)).forEach((x, i) => {
     simulateOneTurn();
   })
 
@@ -296,7 +297,7 @@ app.get('/api/join', (req, res) => {
     return;
   }
 
-  if (gameState.players.length >= numPlayers) {
+  if (gameState.players.length >= NUM_PLAYERS) {
     res.status(400).send({ error: 'Sorry the game is full.' });
     return;
   }
@@ -313,7 +314,7 @@ app.get('/api/join', (req, res) => {
 
 app.get('/api/start', (req, res) => {
 
-  if (gameState.players.length !== numPlayers) {
+  if (gameState.players.length !== NUM_PLAYERS) {
     res.status(400).send({ error: 'Game not full yet.', gameState });
     return;
   }
@@ -323,17 +324,9 @@ app.get('/api/start', (req, res) => {
   res.status(200).send({ message: 'Game started!', gameState });
 });
 
-app.get('/api/restart', (req, res) => {
-
-  gameState.players = [];
-  gameState.active = false;
-  gameState.deck = DECK;
-  gameState.currentTurnIndex = 0;
-  gameState.roundStack = [];
-  gameState.showResults = false;
-  gameState.playerPointsMap = {};
-
-  res.status(200).send({ message: 'Restarted', gameState });
+app.get('/api/reset', (req, res) => {
+  setBlankGameState();
+  res.status(200).send({ message: 'Reset the game.', gameState });
 });
 
 app.get('/api/play', (req, res) => {

@@ -1,7 +1,7 @@
 // Constants
-const numPlayers = 4;
-const numCardsPerRound = 4;
-const numCardsInDeck = 52;
+const NUM_PLAYERS = 4;
+const NUM_CARDS_PER_ROUND = 4;
+const NUM_CARDS_IN_DECK = 52;
 
 const RANKS = {
   ACE: 'ACE',
@@ -26,4 +26,4 @@ const SUITS = {
   HEARTS: 'HEARTS',
 }
 
-module.exports = { numPlayers, numCardsPerRound, numCardsInDeck, RANKS, SUITS };
+module.exports = { NUM_PLAYERS, NUM_CARDS_PER_ROUND, NUM_CARDS_IN_DECK, RANKS, SUITS };
