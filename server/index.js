@@ -246,6 +246,9 @@ const breakSpadesViolation = (suit) => {
     suit === SUITS.SPADES;
 }
 
+// use static files from /build
+app.use(express.static(path.join(__dirname, 'build')));
+
 app.get('/', (req, res) => res.send('Hearts!'));
 
 app.get('/api/game', (req, res) => {
@@ -381,6 +384,11 @@ app.get('/api/play', (req, res) => {
   playCard(index, rank, suit);
 
   res.status(200).send({ message: 'API path in progress...', gameState });
+});
+
+// all routes not yet handled should be served by the built frontend
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`));
