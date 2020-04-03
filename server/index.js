@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const port = 5000;
 
@@ -282,6 +283,13 @@ const simulateOneTurn = () => {
 
 // Note: this is very dangerous to expose freely and can mess the state up drastically
 app.get('/api/simulate', (req, res) => {
+
+  const isProd = false; // temporary solution to disable this
+
+  if (isProd) {
+    res.status(200).send({ message: 'Simulating is disabled here.' });
+    return;
+  }
 
   console.info('beginning simulation...');
 
