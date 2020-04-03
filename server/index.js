@@ -249,7 +249,7 @@ const breakSpadesViolation = (suit) => {
 // use static files from /build
 app.use(express.static(path.join(__dirname, 'build')));
 
-app.get('/', (req, res) => res.send('Hearts!'));
+app.get('/api/health', (req, res) => res.send('Hearts is ready to go!'));
 
 app.get('/api/game', (req, res) => {
   res.status(200).send({ message: 'Here is your data', gameState });
