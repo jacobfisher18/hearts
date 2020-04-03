@@ -2,45 +2,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const port = 5000;
-
-// Constants
-const numPlayers = 4;
-const numCardsPerRound = 4;
-const numCardsInDeck = 52;
-
-const RANKS = {
-  ACE: 'ACE',
-  TWO: 'TWO',
-  THREE: 'THREE',
-  FOUR: 'FOUR',
-  FIVE: 'FIVE',
-  SIX: 'SIX',
-  SEVEN: 'SEVEN',
-  EIGHT: 'EIGHT',
-  NINE: 'NINE',
-  TEN: 'TEN',
-  JACK: 'JACK',
-  QUEEN: 'QUEEN',
-  KING: 'KING',
-}
-
-const SUITS = {
-  CLUBS: 'CLUBS',
-  DIAMONDS: 'DIAMONDS',
-  SPADES: 'SPADES',
-  HEARTS: 'HEARTS',
-}
-
-const DECK = [];
-
-for (i of Object.keys(RANKS)) {
-  for (j of Object.keys(SUITS)) {
-    DECK.push({
-      RANK: i,
-      SUIT: j
-    })
-  }
-}
+const { numPlayers, numCardsPerRound, numCardsInDeck, RANKS, SUITS } = require('./constants');
 
 // Utilities
 const removeFromDeck = (array, value) => {
@@ -116,6 +78,17 @@ const highestRank = (arr) => {
   return '';
 }
 
+// This deck stuff is messed up, it's doing deep copies
+const DECK = [];
+for (i of Object.keys(RANKS)) {
+  for (j of Object.keys(SUITS)) {
+    DECK.push({
+      RANK: i,
+      SUIT: j
+    })
+  }
+}
+
 // State
 // Any requests that modify gameState should return the new gameState
 const gameState = {
@@ -124,6 +97,8 @@ const gameState = {
   deck: DECK, // all the cards left for the current game (notice the game-round distinction)
   currentTurnIndex: 0, // index of the player who's turn it currently is
   roundStack: [], // stack of cards played in the current round, and the person that played it
+  showResults: false, // whether to show the score of the game that just happened
+  playerPointsMap: {}, // the results of the game that just happened
 }
 
 // Functions that modify gameState
@@ -199,6 +174,9 @@ const playCard = (index, rank, suit) => {
 
       console.log('playerPointsMap', playerPointsMap);
 
+      gameState.playerPointsMap = playerPointsMap;
+      gameState.showResults = true;
+
       // TODO: 
       // - calculate if someone shot the moon
       // - store these point values and display in the UI
@@ -207,7 +185,7 @@ const playCard = (index, rank, suit) => {
 
   } else {
     // move forward the current turn by one
-    advanceCurrentTurnByOne();
+    advanceCurrentTurnByOne(gameState);
   }
 }
 
@@ -343,6 +321,19 @@ app.get('/api/start', (req, res) => {
   startGame();
 
   res.status(200).send({ message: 'Game started!', gameState });
+});
+
+app.get('/api/restart', (req, res) => {
+
+  gameState.players = [];
+  gameState.active = false;
+  gameState.deck = DECK;
+  gameState.currentTurnIndex = 0;
+  gameState.roundStack = [];
+  gameState.showResults = false;
+  gameState.playerPointsMap = {};
+
+  res.status(200).send({ message: 'Restarted', gameState });
 });
 
 app.get('/api/play', (req, res) => {

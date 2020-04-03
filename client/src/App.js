@@ -16,8 +16,10 @@ class App extends React.Component {
         active: false,
         players: [],
         currentTurnIndex: 0,
-        roundStack: []
-      }
+        roundStack: [],
+        showResults: false,
+        playerPointsMap: {}
+      },
     }
 
     this.refreshGameState = this.refreshGameState.bind(this);
@@ -29,6 +31,7 @@ class App extends React.Component {
     this.renderRoundStack = this.renderRoundStack.bind(this);
     this.playCard = this.playCard.bind(this);
     this.submitName = this.submitName.bind(this);
+    this.playAgain = this.playAgain.bind(this);
   }
 
   submitName(e) {
@@ -76,6 +79,23 @@ class App extends React.Component {
     this.setState({ error: '' });
 
     fetch(`/api/game`)
+      .then((response) => response.json()) // response must be in json or this will error
+      .then((myJson) => {
+        if (myJson.error) {
+          console.log('Error with fetch request: ', myJson.error);
+          this.setState({ error: myJson.error });
+        } else {
+          this.setState({ gameState: myJson.gameState });
+        }
+      })
+      .catch((err) => {
+        console.log('Error with fetch request: ', err);
+        this.setState({ error: 'There was an unknown problem.' });
+      });
+  }
+
+  playAgain = () => {
+    fetch(`/api/restart`)
       .then((response) => response.json()) // response must be in json or this will error
       .then((myJson) => {
         if (myJson.error) {
@@ -226,7 +246,7 @@ class App extends React.Component {
   render() {
     if (this.state.gameState.active && this.state.activePlayerIndex === -1) {
       return (
-        <div>
+        <div className="App">
           <h1>Hearts</h1>
           <h3>Name</h3>
           {this.state.error && <p>{this.state.error}</p>}
@@ -237,6 +257,21 @@ class App extends React.Component {
             </label>
             <input type="submit" value="Enter" />
           </form>
+        </div>
+      )
+    }
+
+    if (this.state.gameState.showResults) {
+      return (
+        <div className="App">
+          <h1>Hearts</h1>
+          <h3>Results</h3>
+          {this.state.gameState.playerPointsMap.map(item => {
+            return (
+              <p>{item.playerName} got {item.pointsThisRound} points</p>
+            )
+          })}
+          <button onClick={this.playAgain}>Play Again</button>
         </div>
       )
     }
