@@ -1,8 +1,14 @@
 const express = require('express');
 const path = require('path');
 const app = express();
+const {
+  NUM_PLAYERS,
+  NUM_CARDS_PER_ROUND,
+  NUM_CARDS_IN_DECK,
+  RANKS,
+  SUITS
+} = require('./constants');
 const port = 5000;
-const { NUM_PLAYERS, NUM_CARDS_PER_ROUND, NUM_CARDS_IN_DECK, RANKS, SUITS } = require('./constants');
 
 // Utilities
 const removeFromDeck = (array, value) => {
