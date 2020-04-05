@@ -1,7 +1,123 @@
+:root {
+  --main-white: #faf5e4;
+  --color-light: #2c786c;
+  --color-dark: #004445;
+  --color-highlight: #f8b400;
+}
+
 .App {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.TitleAndRefreshContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.GeneralButton {
+  font-size: 10px;
+  padding: 8px 15px;
+  border: 2px solid var(--main-white);
+  border-radius: 100px;
+  letter-spacing: 0.8px;
+  background-color: rgba(0,0,0,0);
+  color: var(--main-white);
+}
+
+.RefreshButton {
+  margin-left: 10px;
+}
+
+.StartGameButton {
+  margin-top: 30px;
+}
+
+.RestartButton {
+  margin-top: 30px;
+}
+
+.ResultsText {
+  margin: 10px 0px;
+}
+
+.GeneralButton:hover {
+  cursor: pointer;
+  background-color: var(--main-white);
+  color: var(--color-dark);
 }
 
 .bold {
   font-weight: bold;
+}
+
+.ErrorHeight {
+  height: 5px;
+  line-height: 5px;
+}
+
+.spacer {
+  color: rgba(0,0,0,0);
+  height: 5px;
+  line-height: 5px;
+}
+
+.PlayerContainer {
+  margin: 5px;
+  padding: 5px 25px;
+  border-radius: 100px;
+  border: 2px solid var(--main-white);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.PlayerContainerCurrentTurn {
+  background-color: var(--main-white);
+}
+
+.Player {
+  margin: 0px;
+  color: var(--main-white);
+}
+
+.PlayerCurrentTurn {
+  color: var(--color-dark);
+}
+
+.PlayerListContainer {
+  display: flex;
+  flex-direction: row;
+}
+
+.RoundStackContainer {
+  flex-direction: row;
+}
+
+.AvailableCardsContainer {
+  flex-direction: row;
+}
+
+.EarnedCardsContainer {
+  flex-direction: row;
+}
+
+.GeneralInputForm {
+  margin-top: 30px;
+}
+
+.GeneralInput {
+  border: none;
+  padding: 8px 15px;
+  width: 100px;
+  border-radius: 100px;
+  border: 2px solid var(--main-white);
+  font-size: 10px;
+  background: none;
+  color: var(--main-white);
+  margin: 0px 10px;
 }

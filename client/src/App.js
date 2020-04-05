@@ -1,12 +1,12 @@
 import React from 'react';
+import Card from './components/Card';
+import { NUM_PLAYERS, cardSortFunction } from './utilities';
 import './App.css';
-
-const NUM_PLAYERS = 4;
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    
+
     this.state = {
       error: '',
       joinName: '', // initial name joined as
@@ -57,20 +57,14 @@ class App extends React.Component {
   renderRoundStack() {
     const { roundStack } = this.state.gameState;
 
-    // there's got to be a better way than this
-    // but it was doing deep reversal with the built in js reverse method
-    let reversedStack = [];
-    for (let item of roundStack) {
-      reversedStack.unshift(item);
-    }
-
-    return reversedStack.map(item => {
+    return roundStack.map(item => {
       return (
-        <div
+        <Card
           key={`${item.card.RANK}-${item.card.SUIT}`}
-        >
-          {item.card.RANK} of {item.card.SUIT}s
-        </div>
+          suit={item.card.SUIT}
+          rank={item.card.RANK}
+          overlap
+        />
       )
     })
   }
@@ -119,7 +113,7 @@ class App extends React.Component {
     e.preventDefault();
     const { joinName } = this.state;
     this.setState({ error: '', joinName: '' });
-    
+
 
     fetch(`/api/join?name=${joinName}`)
       .then((response) => response.json()) // response must be in json or this will error
@@ -183,45 +177,45 @@ class App extends React.Component {
 
   renderPlayerList() {
     const { activePlayerIndex } = this.state;
-    const { active } = this.state.gameState;
 
-    return (
-      <div>
-        <h2>Players</h2>
-        {this.state.gameState.players.map((player, index) => {
-          return (
-            <p
-              className={active && Number(activePlayerIndex) === Number(index) ? 'bold' : ''}
-              key={player.name}
-            >
-              {player.name}{active && Number(this.state.gameState.currentTurnIndex) === Number(index) ? ' (current turn)' : ''}
-            </p>
-          )
-        })}
-      </div>
-    )
+    return this.state.gameState.players.map((player, index) => {
+      return (
+        <div
+          key={player.name}
+          className={`PlayerContainer 
+              ${Number(this.state.gameState.currentTurnIndex) === Number(index) ? ' PlayerContainerCurrentTurn' : ''}`}>
+          <p
+            className={`${Number(activePlayerIndex) === Number(index) ? 'Player bold' : 'Player'} 
+              ${Number(this.state.gameState.currentTurnIndex) === Number(index) ? ' PlayerCurrentTurn' : ''}`}
+          >
+            {player.name}
+          </p>
+        </div>
+      )
+    })
+
   }
 
   renderAvailableCards() {
     const { activePlayerIndex } = this.state;
     const { players, currentTurnIndex } = this.state.gameState;
-    
+
     const availableCards = players[activePlayerIndex].availableCards;
 
-    return availableCards.map(card => {
+    return availableCards.sort(cardSortFunction).map(card => {
       return (
-        <button
+        <Card
           key={`${card.RANK}-${card.SUIT}`}
-          onClick={() => {
+          rank={card.RANK}
+          suit={card.SUIT}
+          clickAction={() => {
             if (Number(currentTurnIndex) !== Number(activePlayerIndex)) {
-              alert('It is not your turn.');
+              this.setState({ error: 'It is not your turn. ' });
             } else {
               this.playCard(activePlayerIndex, card.RANK, card.SUIT);
             }
           }}
-        >
-          {card.RANK} of {card.SUIT}s
-        </button>
+        />
       )
     })
   }
@@ -234,33 +228,34 @@ class App extends React.Component {
 
     return earnedCards.map(card => {
       return (
-        <div
+        <Card
           key={`${card.RANK}-${card.SUIT}`}
-        >
-          {card.RANK} of {card.SUIT}s
-        </div>
+          suit={card.SUIT}
+          rank={card.RANK}
+        />
       )
     })
   }
 
   render() {
+    // Render screen with prompt for user's name after refresh
     if (this.state.gameState.active && this.state.activePlayerIndex === -1) {
       return (
         <div className="App">
           <h1>Hearts</h1>
-          <h3>Name</h3>
-          {this.state.error && <p>{this.state.error}</p>}
-          <form onSubmit={this.submitName}>
+          {this.state.error ? <p className="ErrorHeight">{this.state.error}</p> : <p className="ErrorHeight spacer">spacer</p>}
+          <form className="GeneralInputForm" onSubmit={this.submitName}>
             <label>
               What name did you join as?
-            <input type="text" value={this.state.refreshName} onChange={e => { this.setState({ refreshName: e.target.value }) }} />
             </label>
-            <input type="submit" value="Enter" />
+            <input className="GeneralInput" type="text" value={this.state.refreshName} onChange={e => { this.setState({ refreshName: e.target.value }) }} />
+            <input className="GeneralButton" type="submit" value="ENTER" />
           </form>
         </div>
       )
     }
 
+    // Render results screen
     if (this.state.gameState.showResults) {
       return (
         <div className="App">
@@ -268,41 +263,65 @@ class App extends React.Component {
           <h3>Results</h3>
           {this.state.gameState.playerPointsMap.map(item => {
             return (
-              <p>{item.playerName} got {item.pointsThisRound} points</p>
+              <p className="ResultsText">{item.playerName} got {item.pointsThisRound} points</p>
             )
           })}
-          <button onClick={this.resetGame}>Reset Game</button>
+          <div className="GeneralButton RestartButton" onClick={this.resetGame}>RESTART</div>
         </div>
       )
     }
 
-    return this.state.gameState.active ?
+    // Render actual game screen
+    if (this.state.gameState.active) {
+      return (
+        <div className="App">
+          <div className="TitleAndRefreshContainer">
+            <h1>Hearts</h1>
+            <div className="GeneralButton RefreshButton" onClick={this.refreshGameState}>REFRESH</div>
+          </div>
+          {this.state.error ? <p className="ErrorHeight">{this.state.error}</p> : <p className="ErrorHeight spacer">spacer</p>}
+          <h3>Players</h3>
+          <div className="PlayerListContainer">
+            {this.renderPlayerList()}
+          </div>
+          <h3>Round Stack</h3>
+          <div className="RoundStackContainer">
+            {this.renderRoundStack()}
+          </div>
+          <h3>My Available Cards</h3>
+          <div className="AvailableCardsContainer">
+            {this.renderAvailableCards()}
+          </div>
+          <h3>My Earned Cards</h3>
+          <div className="EarnedCardsContainer">
+            {this.renderEarnedCards()}
+          </div>
+        </div>
+      )
+    }
+
+    // Render waiting room
+    return (
       <div className="App">
-        <h1>Hearts</h1>
-        <button onClick={this.refreshGameState}>Refresh</button>
-        {this.renderPlayerList()}
-        {this.state.error && <p>{this.state.error}</p>}
-        <h3>Round Stack</h3>
-        {this.renderRoundStack()}
-        <h3>My Available Cards</h3>
-        {this.renderAvailableCards()}
-        <h3>My Earned Cards</h3>
-        {this.renderEarnedCards()}
-      </div> :
-      <div className="App">
-        <h1>Hearts</h1>
-        <button onClick={this.refreshGameState}>Refresh</button>
-        {this.renderPlayerList()}
-        {this.state.error && <p>{this.state.error}</p>}
-        <form onSubmit={this.joinGame}>
+        <div className="TitleAndRefreshContainer">
+          <h1>Hearts</h1>
+          <div className="GeneralButton RefreshButton" onClick={this.refreshGameState}>REFRESH</div>
+        </div>
+        {this.state.error ? <p className="ErrorHeight">{this.state.error}</p> : <p className="ErrorHeight spacer">spacer</p>}
+        <h3>Players</h3>
+        <div className="PlayerListContainer">
+          {this.renderPlayerList()}
+        </div>
+        <form className="GeneralInputForm" onSubmit={this.joinGame}>
           <label>
             Name:
-            <input type="text" value={this.state.joinName} onChange={e => { this.setState({ joinName: e.target.value }) }} />
+            <input className="GeneralInput" type="text" value={this.state.joinName} onChange={e => { this.setState({ joinName: e.target.value }) }} />
           </label>
-          <input type="submit" value="Join" />
+          <input className="GeneralButton" type="submit" value="JOIN" />
         </form>
-        <button onClick={this.startGame}>Start Game</button>
+        <div className="GeneralButton StartGameButton" onClick={this.startGame}>START</div>
       </div>
+    )
   }
 }
 

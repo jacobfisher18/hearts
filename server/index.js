@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const bodyParser = require('body-parser');
 const app = express();
 const {
   NUM_PLAYERS,
@@ -77,7 +78,7 @@ const highestRank = (arr) => {
   if (ranks.includes(RANKS.SIX)) return RANKS.SIX;
   if (ranks.includes(RANKS.FIVE)) return RANKS.FIVE;
   if (ranks.includes(RANKS.FOUR)) return RANKS.FOUR;
-  if (ranks.includes(RANKS.THREE)) return RANKS.KITHREENG;
+  if (ranks.includes(RANKS.THREE)) return RANKS.THREE;
   if (ranks.includes(RANKS.TWO)) return RANKS.TWO;
   if (ranks.includes(RANKS.ACE)) return RANKS.ACE;
 
@@ -89,10 +90,19 @@ const setBlankGameState = () => {
   gameState.players = [];
   gameState.active = false; // whether the game has started
   gameState.deck = []; // all the cards left for the current game (notice the game-round distinction)
-  gameState.currentTurnIndex = 0; // index of the player who's turn it currently is
+  gameState.currentTurnIndex = -1; // index of the player who's turn it currently is
   gameState.roundStack = []; // stack of cards played in the current round, and the person that played it
   gameState.showResults = false; // whether to show the score of the game that just happened
   gameState.playerPointsMap = {}; // the results of the game that just happened
+}
+
+const editGameState = (newState) => {
+  gameState.players = newState.players;
+  gameState.active = newState.active;
+  gameState.deck = newState.deck;
+  gameState.currentTurnIndex = newState.currentTurnIndex
+  gameState.showResults = newState.showResults;
+  gameState.playerPointsMap = newState.playerPointsMap;
 }
 
 // Any requests that modify gameState should return the new gameState
@@ -232,6 +242,12 @@ const breakSpadesViolation = (suit) => {
 // use static files from /build
 app.use(express.static(path.join(__dirname, 'build')));
 
+// get request body
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true,
+}));
+
 app.get('/api/health', (req, res) => res.send('Hearts is ready to go!'));
 
 app.get('/api/game', (req, res) => {
@@ -333,6 +349,26 @@ app.get('/api/start', (req, res) => {
 app.get('/api/reset', (req, res) => {
   setBlankGameState();
   res.status(200).send({ message: 'Reset the game.', gameState });
+});
+
+app.post('/api/edit', (req, res) => {
+  const { data } = req.body;
+  
+  // TODO: this should do a lot more validation than this
+  // Typescript could probably validate it all easily huh
+  if (!data.hasOwnProperty('players') ||
+    !data.hasOwnProperty('active') ||
+    !data.hasOwnProperty('deck') ||
+    !data.hasOwnProperty('currentTurnIndex') ||
+    !data.hasOwnProperty('roundStack') ||
+    !data.hasOwnProperty('showResults') ||
+    !data.hasOwnProperty('playerPointsMap')) {
+    res.status(400).send({ error: 'Invalid data object provided.' });
+    return;
+  }
+
+  editGameState(data);
+  res.status(200).send({ message: 'Game state edited.', gameState });
 });
 
 app.get('/api/play', (req, res) => {
