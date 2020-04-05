@@ -36,7 +36,8 @@ class App extends React.Component {
     this.resetGame = this.resetGame.bind(this);
 
     // Socket
-    const socket = io("http://localhost:5000/");
+    // const socket = io("http://localhost:5000/");
+    const socket = io();
 
     socket.on('connect', () => {
       console.log('Socket connected');
