@@ -1,4 +1,5 @@
 import React from 'react';
+import io from 'socket.io-client';
 import Card from './components/Card';
 import { NUM_PLAYERS, cardSortFunction } from './utilities';
 import './App.css';
@@ -33,6 +34,17 @@ class App extends React.Component {
     this.playCard = this.playCard.bind(this);
     this.submitName = this.submitName.bind(this);
     this.resetGame = this.resetGame.bind(this);
+
+    // Socket
+    const socket = io("http://localhost:5000/");
+
+    socket.on('connect', () => {
+      console.log('Socket connected');
+    });
+
+    socket.on('card played', (msg) => {
+      this.setState({ gameState: msg })
+    });
   }
 
   submitName(e) {
@@ -239,8 +251,6 @@ class App extends React.Component {
   }
 
   render() {
-    console.log('gameStatusText: ', this.state.gameState.gameStatusText);
-
     // Render screen with prompt for user's name after refresh
     if (this.state.gameState.active && this.state.activePlayerIndex === -1) {
       return (

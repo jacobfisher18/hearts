@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const app = express();
+var http = require('http').createServer(app);
+var io = require('socket.io')(http);
 const {
   NUM_PLAYERS,
   NUM_CARDS_PER_ROUND,
@@ -424,6 +426,7 @@ app.get('/api/play', (req, res) => {
   }
 
   playCard(index, rank, suit);
+  io.emit('card played', gameState);
 
   res.status(200).send({ message: 'API path in progress...', gameState });
 });
@@ -433,4 +436,9 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`));
+// Socket connections
+io.on('connection', () => {
+  console.log('a user connected');
+});
+
+http.listen(port, () => console.log(`Example app listening at http://localhost:${port}`));
