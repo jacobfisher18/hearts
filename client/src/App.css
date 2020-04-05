@@ -53,15 +53,13 @@
   font-weight: bold;
 }
 
-.ErrorHeight {
+.InfoMessageHeight {
   height: 5px;
   line-height: 5px;
 }
 
 .spacer {
   color: rgba(0,0,0,0);
-  height: 5px;
-  line-height: 5px;
 }
 
 .PlayerContainer {

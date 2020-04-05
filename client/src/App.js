@@ -18,7 +18,8 @@ class App extends React.Component {
         currentTurnIndex: 0,
         roundStack: [],
         showResults: false,
-        playerPointsMap: {}
+        playerPointsMap: {},
+        gameStatusText: ''
       },
     }
 
@@ -63,7 +64,7 @@ class App extends React.Component {
           key={`${item.card.RANK}-${item.card.SUIT}`}
           suit={item.card.SUIT}
           rank={item.card.RANK}
-          overlap
+          overlap={roundStack.length > 1}
         />
       )
     })
@@ -238,12 +239,14 @@ class App extends React.Component {
   }
 
   render() {
+    console.log('gameStatusText: ', this.state.gameState.gameStatusText);
+
     // Render screen with prompt for user's name after refresh
     if (this.state.gameState.active && this.state.activePlayerIndex === -1) {
       return (
         <div className="App">
           <h1>Hearts</h1>
-          {this.state.error ? <p className="ErrorHeight">{this.state.error}</p> : <p className="ErrorHeight spacer">spacer</p>}
+          {this.state.error ? <p className="InfoMessageHeight">{this.state.error}</p> : <p className="InfoMessageHeight spacer">spacer</p>}
           <form className="GeneralInputForm" onSubmit={this.submitName}>
             <label>
               What name did you join as?
@@ -279,7 +282,13 @@ class App extends React.Component {
             <h1>Hearts</h1>
             <div className="GeneralButton RefreshButton" onClick={this.refreshGameState}>REFRESH</div>
           </div>
-          {this.state.error ? <p className="ErrorHeight">{this.state.error}</p> : <p className="ErrorHeight spacer">spacer</p>}
+          {
+            this.state.error ?
+              <p className="InfoMessageHeight">{this.state.error}</p> :
+              this.state.gameState.gameStatusText ?
+                <p className="InfoMessageHeight">{this.state.gameState.gameStatusText}</p> :
+                <p className="InfoMessageHeight spacer">spacer</p>
+          }
           <h3>Players</h3>
           <div className="PlayerListContainer">
             {this.renderPlayerList()}
@@ -307,7 +316,7 @@ class App extends React.Component {
           <h1>Hearts</h1>
           <div className="GeneralButton RefreshButton" onClick={this.refreshGameState}>REFRESH</div>
         </div>
-        {this.state.error ? <p className="ErrorHeight">{this.state.error}</p> : <p className="ErrorHeight spacer">spacer</p>}
+        {this.state.error ? <p className="InfoMessageHeight">{this.state.error}</p> : <p className="InfoMessageHeight spacer">spacer</p>}
         <h3>Players</h3>
         <div className="PlayerListContainer">
           {this.renderPlayerList()}

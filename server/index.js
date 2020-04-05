@@ -94,6 +94,7 @@ const setBlankGameState = () => {
   gameState.roundStack = []; // stack of cards played in the current round, and the person that played it
   gameState.showResults = false; // whether to show the score of the game that just happened
   gameState.playerPointsMap = {}; // the results of the game that just happened
+  gameState.gameStatusText = '';
 }
 
 const editGameState = (newState) => {
@@ -103,6 +104,7 @@ const editGameState = (newState) => {
   gameState.currentTurnIndex = newState.currentTurnIndex
   gameState.showResults = newState.showResults;
   gameState.playerPointsMap = newState.playerPointsMap;
+  gameState.gameStatusText = newState.gameStatusText;
 }
 
 // Any requests that modify gameState should return the new gameState
@@ -157,6 +159,8 @@ const playCard = (index, rank, suit) => {
   // add card to round stack
   gameState.roundStack.push({ card: { RANK: rank, SUIT: suit }, playerIndex: index });
 
+  gameState.gameStatusText = `${gameState.players[index].name} played the ${rank.toLowerCase()} of ${suit.toLowerCase()}`;
+
   // check if this is the fourth card played in the round; if so, assign the cards to the person who played the highest relevant rank
   if (gameState.roundStack.length === NUM_CARDS_PER_ROUND) {
     const roundStackBaseSuitOnly = gameState.roundStack.filter(item => item.card.SUIT === baseSuit);
@@ -174,6 +178,9 @@ const playCard = (index, rank, suit) => {
 
     // set current turn to the winner
     gameState.currentTurnIndex = Number(winningIndex);
+
+    // update the game status text
+    gameState.gameStatusText = gameState.gameStatusText + ` and ${gameState.players[winningIndex].name} took the stack`;
 
     if (isGameOver()) {
       const playerPointsMap = gameState.players.map(player => {
@@ -362,7 +369,8 @@ app.post('/api/edit', (req, res) => {
     !data.hasOwnProperty('currentTurnIndex') ||
     !data.hasOwnProperty('roundStack') ||
     !data.hasOwnProperty('showResults') ||
-    !data.hasOwnProperty('playerPointsMap')) {
+    !data.hasOwnProperty('playerPointsMap') ||
+    !data.hasOwnProperty('gameStatusText')) {
     res.status(400).send({ error: 'Invalid data object provided.' });
     return;
   }
