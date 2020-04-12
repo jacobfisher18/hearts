@@ -218,6 +218,12 @@ const isCurrentTurn = (index) => {
   return Number(index) === Number(gameState.currentTurnIndex);
 }
 
+const playerHasAvailableCard = (index, rank, suit) => {
+  return gameState.players[index].availableCards.filter(item => {
+    return item.SUIT === suit & item.RANK === rank
+  }).length > 0;
+}
+
 // Move violations
 
 const firstMoveOfGameAceOfDiamondsViolation = (rank, suit) => {
@@ -401,6 +407,11 @@ app.get('/api/play', (req, res) => {
 
   if (!isCurrentTurn(index)) {
     res.status(400).send({ error: 'It is not your turn.' });
+    return;
+  }
+
+  if (!playerHasAvailableCard(index, rank, suit)) {
+    res.status(400).send({ error: 'You do not have that card available.' });
     return;
   }
 
