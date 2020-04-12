@@ -351,6 +351,7 @@ app.get('/api/join', (req, res) => {
   }
 
   addPlayerToGame(name);
+  io.emit('state changed', gameState);
 
   res.status(200).send({ message: 'Joined!', name, gameState });
 });
@@ -363,12 +364,14 @@ app.get('/api/start', (req, res) => {
   }
 
   startGame();
+  io.emit('state changed', gameState);
 
   res.status(200).send({ message: 'Game started!', gameState });
 });
 
 app.get('/api/reset', (req, res) => {
   setBlankGameState();
+  io.emit('state changed', gameState);
   res.status(200).send({ message: 'Reset the game.', gameState });
 });
 
@@ -390,6 +393,7 @@ app.post('/api/edit', (req, res) => {
   }
 
   editGameState(data);
+  io.emit('state changed', gameState);
   res.status(200).send({ message: 'Game state edited.', gameState });
 });
 
@@ -448,7 +452,7 @@ app.get('/api/play', (req, res) => {
   }
 
   playCard(index, rank, suit);
-  io.emit('card played', gameState);
+  io.emit('state changed', gameState);
 
   res.status(200).send({ message: 'Move made.', gameState });
 });

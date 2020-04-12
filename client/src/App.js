@@ -44,7 +44,7 @@ class App extends React.Component {
       console.log('Socket connected');
     });
 
-    socket.on('card played', (msg) => {
+    socket.on('state changed', (msg) => {
       this.setState({ gameState: msg })
     });
   }
