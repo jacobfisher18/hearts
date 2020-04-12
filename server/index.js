@@ -212,6 +212,12 @@ const playCard = (index, rank, suit) => {
   }
 }
 
+// Game state based utilities
+
+const isCurrentTurn = (index) => {
+  return Number(index) === Number(gameState.currentTurnIndex);
+}
+
 // Move violations
 
 const firstMoveOfGameAceOfDiamondsViolation = (rank, suit) => {
@@ -393,7 +399,12 @@ app.get('/api/play', (req, res) => {
     return;
   }
 
-  // Potential errors
+  if (!isCurrentTurn(index)) {
+    res.status(400).send({ error: 'It is not your turn.' });
+    return;
+  }
+
+  // Potential move violations
 
   // 1. first move of the game must be ace of diamonds
   if (firstMoveOfGameAceOfDiamondsViolation(rank, suit)) {
@@ -428,7 +439,7 @@ app.get('/api/play', (req, res) => {
   playCard(index, rank, suit);
   io.emit('card played', gameState);
 
-  res.status(200).send({ message: 'API path in progress...', gameState });
+  res.status(200).send({ message: 'Move made.', gameState });
 });
 
 // all routes not yet handled should be served by the built frontend
